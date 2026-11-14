@@ -234,14 +234,15 @@ async function saveStatus(env, body, now) {
   const metrics = body.metrics || {};
   await env.DB.prepare(`
     INSERT INTO streamer_status (
-      slug, stream_state, stream_title, category, diagnostics_state,
+      slug, stream_state, stream_title, category, slogan, diagnostics_state,
       rendering_lag_percent, encoding_lag_percent, network_dropped_frames_percent,
       viewers, updated_at, last_seen_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(slug) DO UPDATE SET
       stream_state = excluded.stream_state,
       stream_title = excluded.stream_title,
       category = excluded.category,
+      slogan = excluded.slogan,
       diagnostics_state = excluded.diagnostics_state,
       rendering_lag_percent = excluded.rendering_lag_percent,
       encoding_lag_percent = excluded.encoding_lag_percent,
@@ -254,6 +255,7 @@ async function saveStatus(env, body, now) {
     body.streamState,
     typeof body.title === "string" ? body.title.slice(0, 120) : null,
     typeof body.category === "string" ? body.category.slice(0, 80) : null,
+    typeof body.slogan === "string" ? body.slogan.trim().slice(0, 160) || null : null,
     body.diagnosticsState || "unknown",
     metrics.renderingLagPercent ?? null,
     metrics.encodingLagPercent ?? null,
@@ -269,13 +271,14 @@ async function publicStatus(env, slug) {
     "SELECT * FROM streamer_status WHERE slug = ?"
   ).bind(slug).first();
 
-  if (!row) return null;
+  if (!row || !row.slogan) return null;
 
   const ttl = Math.max(30, Number(env.HEARTBEAT_TTL_SECONDS) || 90);
   const lastSeen = Date.parse(row.last_seen_at);
   const stale = !Number.isFinite(lastSeen) || Date.now() - lastSeen > ttl * 1000;
   return {
     streamer: row.slug,
+    slogan: row.slogan,
     state: stale ? "offline" : row.stream_state,
     stream: {
       title: row.stream_title,
