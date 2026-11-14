@@ -3,11 +3,10 @@
  * The ingest token is only sent in the Authorization header and is never logged.
  */
 export class CloudPublisher {
-  constructor({ apiUrl, token, slug, slogan = "", obs, intervalMs = 15000 }) {
+  constructor({ apiUrl, token, slug, obs, intervalMs = 15000 }) {
     this.apiUrl = apiUrl.replace(/\/+$/, "");
     this.token = token;
     this.slug = slug;
-    this.slogan = slogan;
     this.obs = obs;
     this.intervalMs = intervalMs;
     this.timer = null;
@@ -40,7 +39,6 @@ export class CloudPublisher {
 
     const body = {
       slug: this.slug,
-      slogan: this.slogan,
       streamState: obsStatus.connected && obsStatus.stream?.active ? "live" : "offline",
       diagnosticsState: diagnostics.state,
       metrics: {
