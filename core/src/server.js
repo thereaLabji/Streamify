@@ -79,7 +79,8 @@ const server = createServer(async (request, response) => {
       capabilities: {
         localApi: true,
         obsConnected: obs.connected,
-        streamerAuthentication: false,\n        pairingCodeGeneration: Boolean(cloud),
+        streamerAuthentication: false,
+        pairingCodeGeneration: Boolean(cloud),
         telemetryIngestion: obs.connected,
         cloudPublishing: Boolean(cloud),
         automaticRepair: false
