@@ -48,7 +48,7 @@ The deployment prints the public `workers.dev` URL. Check `/health`.
 - `GET /health` — public service health.
 - `POST /v1/heartbeat` — authenticated heartbeat; JSON body: `{"slug":"your-slug"}`.
 - `POST /v1/status` — authenticated public-safe status update.
-- `GET /v1/status/:slug` — public status for a streamer.
+- `GET /v1/status/:slug` — public status for a streamer.\n- `POST /v1/pairing/code` — issue a short-lived 16-digit code (ingest-token authenticated; body: `{"slug":"your-slug"}`).\n- `POST /v1/pairing/exchange` — exchange a code once for a 30-day session (body: `{"code":"0000000000000000"}`).\n- `GET /v1/session` — validate the current session.\n- `DELETE /v1/session` — revoke the current session.
 
 Status update example:
 
@@ -72,3 +72,18 @@ The API marks status offline and hides diagnostic values when no heartbeat has a
 ## Current boundary
 
 This is the first public API foundation. Streamify Core publishing and the status-page API integration are subsequent tasks. Do not consider the public site live-connected until those pieces are deployed and verified.
+
+
+## Streamer pairing
+
+Apply the new authentication migration before using pairing:
+
+```powershell
+npx wrangler d1 migrations apply streamify-status --local
+npx wrangler d1 migrations apply streamify-status --remote
+npx wrangler deploy
+```
+
+The Core requests a 16-digit code using its private ingest token. Codes expire after five minutes, only one active code is kept per streamer, and codes are stored as SHA-256 hashes. A successful exchange consumes the code and returns a random session token. Only a hash of that session token is stored; sessions expire after 30 days and can be revoked with `DELETE /v1/session`.
+
+Pairing code creation is limited to five requests per streamer per hour. Code exchange is limited to ten attempts per source IP per 15 minutes. The browser must keep the returned session token private and send it only in the Authorization header. Never put session tokens in URLs, public pages, or Git.
