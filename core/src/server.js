@@ -3,11 +3,15 @@ import { loadConfig } from "./config.js";
 import { evaluateTelemetry } from "./diagnostics/engine.js";
 import { CoreEventBus } from "./event-bus.js";
 import { ObsConnector } from "./obs/connector.js";
+import { CloudPublisher } from "./cloud-publisher.js";
 
 const config = loadConfig();
 const events = new CoreEventBus();
 const startedAt = Date.now();
 const obs = new ObsConnector({ ...config.obs });
+const cloud = config.cloud.token
+  ? new CloudPublisher({ ...config.cloud, obs })
+  : null;
 
 function sendJson(request, response, statusCode, body) {
   const payload = JSON.stringify(body, null, 2);
@@ -45,7 +49,7 @@ const server = createServer((request, response) => {
   if (route === "/health" || route === "/api/v1/core") {
     sendJson(request, response, 200, {
       name: "Streamify Core",
-      version: "0.2.0",
+      version: "0.3.0",
       state: "running",
       environment: config.environment,
       uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
@@ -55,6 +59,7 @@ const server = createServer((request, response) => {
         obsConnected: obs.connected,
         streamerAuthentication: false,
         telemetryIngestion: obs.connected,
+        cloudPublishing: Boolean(cloud),
         automaticRepair: false
       }
     });
@@ -91,10 +96,17 @@ server.listen(config.port, config.host, async () => {
   console.log("[Streamify Core] Local-only API.");
   events.publish("core.started", { host: config.host, port: config.port });
   await obs.start();
+  if (cloud) {
+    await cloud.start();
+    console.log(`[Streamify Cloud] Publishing public status for @${config.cloud.slug}.`);
+  } else {
+    console.log("[Streamify Cloud] Disabled; configure STREAMIFY_INGEST_TOKEN to enable publishing.");
+  }
 });
 
 async function shutdown(signal) {
   console.log(`[Streamify Core] ${signal} received; shutting down.`);
+  if (cloud) await cloud.stop();
   await obs.stop();
   server.close(() => process.exit(0));
 }
