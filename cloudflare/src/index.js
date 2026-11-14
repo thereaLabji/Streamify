@@ -55,7 +55,7 @@ async function issuePairingCode(request, env) {
   catch (error) {
     return json({ error: error.message === "body_too_large" ? "body_too_large" : "invalid_json" }, 400);
   }
-  if (!validIngestSlug(body.slug, env)) return json({ error: "invalid_slug" }, 400);
+  if (!body || typeof body !== "object" || !validIngestSlug(body.slug, env)) return json({ error: "invalid_slug" }, 400);
   const allowed = await rateLimit(env, `pair-create:${body.slug}`, 5, 3600);
   if (!allowed) return json({ error: "rate_limited" }, 429);
   const now = Math.floor(Date.now() / 1000);
@@ -81,7 +81,7 @@ async function exchangePairingCode(request, env) {
   catch (error) {
     return json({ error: error.message === "body_too_large" ? "body_too_large" : "invalid_json" }, 400);
   }
-  if (typeof body.code !== "string" || !/^\d{16}$/.test(body.code)) {
+  if (!body || typeof body !== "object" || typeof body.code !== "string" || !/^\d{16}$/.test(body.code)) {
     return json({ error: "invalid_pairing_code" }, 400);
   }
   const now = Math.floor(Date.now() / 1000);
