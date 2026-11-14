@@ -17,6 +17,6 @@
   ],
   "vars": {
     "ALLOWED_ORIGIN": "https://thereaLabji.github.io",
-    "HEARTBEAT_TTL_SECONDS": "90"
+    "HEARTBEAT_TTL_SECONDS": "90",\n    "STREAMIFY_INGEST_SLUG": "ddz0"
   }
 }
