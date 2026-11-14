@@ -1,4 +1,141 @@
-const JSON_HEADERS = {
+
+const PAIRING_TTL_SECONDS = 5 * 60;
+const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function randomPairingCode() {
+  const limit = (1n << 56n) / 10000000000000000n * 10000000000000000n;
+  while (true) {
+    const bytes = crypto.getRandomValues(new Uint8Array(7));
+    let value = 0n;
+    for (const byte of bytes) value = (value << 8n) | BigInt(byte);
+    if (value < limit) return (value % 10000000000000000n).toString().padStart(16, "0");
+  }
+}
+
+function bearer(request) {
+  const header = request.headers.get("Authorization") || "";
+  return header.startsWith("Bearer ") ? header.slice(7) : "";
+}
+
+async function rateLimit(env, key, limit, windowSeconds) {
+  const now = Math.floor(Date.now() / 1000);
+  await env.DB.prepare(`
+    INSERT INTO auth_rate_limits (rate_key, window_started_at, attempts)
+    VALUES (?, ?, 1)
+    ON CONFLICT(rate_key) DO UPDATE SET
+      attempts = CASE
+        WHEN window_started_at <= ? THEN 1
+        ELSE attempts + 1
+      END,
+      window_started_at = CASE
+        WHEN window_started_at <= ? THEN excluded.window_started_at
+        ELSE window_started_at
+      END
+  `).bind(key, now, now - windowSeconds, now - windowSeconds).run();
+  const row = await env.DB.prepare(
+    "SELECT attempts FROM auth_rate_limits WHERE rate_key = ?"
+  ).bind(key).first();
+  return Boolean(row && row.attempts <= limit);
+}
+
+async function requestIpKey(request, purpose) {
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  return `${purpose}:${await sha256Hex(ip)}`;
+}
+
+async function issuePairingCode(request, env) {
+  if (!(await authorized(request, env))) return json({ error: "unauthorized" }, 401);
+  let body;
+  try { body = await readBody(request); }
+  catch (error) {
+    return json({ error: error.message === "body_too_large" ? "body_too_large" : "invalid_json" }, 400);
+  }
+  if (!validSlug(body.slug)) return json({ error: "invalid_slug" }, 400);
+  const allowed = await rateLimit(env, `pair-create:${body.slug}`, 5, 3600);
+  if (!allowed) return json({ error: "rate_limited" }, 429);
+  const now = Math.floor(Date.now() / 1000);
+  const code = await randomPairingCode();
+  const codeHash = await sha256Hex(code);
+  await env.DB.prepare(
+    "UPDATE pairing_codes SET used_at = ? WHERE slug = ? AND used_at IS NULL"
+  ).bind(now, body.slug).run();
+  await env.DB.prepare(
+    "INSERT INTO pairing_codes (code_hash, slug, created_at, expires_at) VALUES (?, ?, ?, ?)"
+  ).bind(codeHash, body.slug, now, now + PAIRING_TTL_SECONDS).run();
+  return json({ code, expiresAt: new Date((now + PAIRING_TTL_SECONDS) * 1000).toISOString() }, 201);
+}
+
+async function exchangePairingCode(request, env) {
+  const ipKey = await requestIpKey(request, "pair-exchange");
+  if (!(await rateLimit(env, ipKey, 10, 900))) return json({ error: "rate_limited" }, 429);
+  let body;
+  try { body = await readBody(request); }
+  catch (error) {
+    return json({ error: error.message === "body_too_large" ? "body_too_large" : "invalid_json" }, 400);
+  }
+  if (typeof body.code !== "string" || !/^\d{16}$/.test(body.code)) {
+    return json({ error: "invalid_pairing_code" }, 400);
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const codeHash = await sha256Hex(body.code);
+  const row = await env.DB.prepare(
+    "SELECT slug FROM pairing_codes WHERE code_hash = ? AND used_at IS NULL AND expires_at > ?"
+  ).bind(codeHash, now).first();
+  if (!row) return json({ error: "invalid_or_expired_code" }, 401);
+
+  const consumed = await env.DB.prepare(
+    "UPDATE pairing_codes SET used_at = ? WHERE code_hash = ? AND used_at IS NULL AND expires_at > ?"
+  ).bind(now, codeHash, now).run();
+  if (!consumed.meta || consumed.meta.changes !== 1) {
+    return json({ error: "invalid_or_expired_code" }, 401);
+  }
+
+  const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)),
+    byte => byte.toString(16).padStart(2, "0")).join("");
+  const tokenHash = await sha256Hex(sessionToken);
+  const expiresAt = now + SESSION_TTL_SECONDS;
+  await env.DB.prepare(
+    "INSERT INTO streamer_sessions (token_hash, slug, created_at, expires_at) VALUES (?, ?, ?, ?)"
+  ).bind(tokenHash, row.slug, now, expiresAt).run();
+  return json({
+    streamer: row.slug,
+    sessionToken,
+    expiresAt: new Date(expiresAt * 1000).toISOString()
+  }, 201);
+}
+
+async function readSession(request, env) {
+  const token = bearer(request);
+  if (!token || token.length > 256) return null;
+  const tokenHash = await sha256Hex(token);
+  const now = Math.floor(Date.now() / 1000);
+  return env.DB.prepare(
+    "SELECT slug, expires_at FROM streamer_sessions WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > ?"
+  ).bind(tokenHash, now).first();
+}
+
+async function sessionRoute(request, env) {
+  const session = await readSession(request, env);
+  if (!session) return json({ error: "unauthorized" }, 401);
+  if (request.method === "GET") {
+    return json({ authenticated: true, streamer: session.slug,
+      expiresAt: new Date(session.expires_at * 1000).toISOString() });
+  }
+  if (request.method === "DELETE") {
+    const tokenHash = await sha256Hex(bearer(request));
+    await env.DB.prepare(
+      "UPDATE streamer_sessions SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL"
+    ).bind(Math.floor(Date.now() / 1000), tokenHash).run();
+    return json({ revoked: true });
+  }
+  return json({ error: "method_not_allowed" }, 405, { allow: "GET, DELETE" });
+}
+\nconst JSON_HEADERS = {
   "content-type": "application/json; charset=utf-8",
   "cache-control": "no-store",
   "x-content-type-options": "nosniff"
@@ -17,7 +154,7 @@ function corsHeaders(request, env) {
   const headers = { "vary": "Origin" };
   if (origin === allowed) {
     headers["access-control-allow-origin"] = origin;
-    headers["access-control-allow-methods"] = "GET, POST, OPTIONS";
+    headers["access-control-allow-methods"] = "GET, POST, DELETE, OPTIONS";
     headers["access-control-allow-headers"] = "Authorization, Content-Type";
     headers["access-control-max-age"] = "86400";
   }
@@ -141,6 +278,18 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors });
+    }
+
+    if (url.pathname === "/v1/pairing/code" && request.method === "POST") {
+      return issuePairingCode(request, env);
+    }
+
+    if (url.pathname === "/v1/pairing/exchange" && request.method === "POST") {
+      return exchangePairingCode(request, env);
+    }
+
+    if (url.pathname === "/v1/session" && (request.method === "GET" || request.method === "DELETE")) {
+      return sessionRoute(request, env);
     }
 
     if (url.pathname === "/health" && request.method === "GET") {
