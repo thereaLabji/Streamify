@@ -42,7 +42,9 @@ For a standard Windows OBS installation, OBS Studio 33's current third-party plu
 
 ```text
 C:\\ProgramData\\obs-studio\\plugins\\streamify-obs\\
-  streamify-obs.dll
+  bin\\
+    64bit\\
+      streamify-obs.dll
   data\\
     locale\\
       en-US.ini
