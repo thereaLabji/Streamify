@@ -69,11 +69,10 @@ $env:STREAMIFY_OBS_ADDRESS = "ws://127.0.0.1:4455"
 $env:STREAMIFY_OBS_PASSWORD = "YOUR_OBS_WEBSOCKET_PASSWORD"
 $env:STREAMIFY_INGEST_TOKEN = "YOUR_CLOUDFLARE_INGEST_TOKEN"
 $env:STREAMIFY_STREAMER_SLUG = "ddz0"
-$env:STREAMIFY_STREAMER_SLOGAN = "Your actual streamer slogan"
 npm start
 ```
 
-Core publishes a minimal OBS status snapshot and the configured streamer slogan every 15 seconds to the Cloudflare API. Set `STREAMIFY_STREAMER_SLOGAN` to the actual slogan you want displayed. The public status page reads the slug from `?user_src=ddz0` and loads that streamer's slogan and status from `/v1/status/ddz0`. The token stays on the streamer's machine and is sent only as a Bearer authorization header. Do not expose it in browser code, public configuration, or Git.
+Core publishes a minimal OBS status snapshot every 15 seconds to the Cloudflare API. The streamer's slug is also the slogan displayed on the public status page. The page reads the slug from `?user_src=ddz0` and loads that streamer's status from `/v1/status/ddz0`. The token stays on the streamer's machine and is sent only as a Bearer authorization header. Do not expose it in browser code, public configuration, or Git.
 
 
 ## Streamer pairing (backend foundation)
