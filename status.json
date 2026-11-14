@@ -1,0 +1,10 @@
+{
+  "state": "offline",
+  "summary": "Waiting for a status update from OBS.",
+  "platform": "Not connected",
+  "uptime": null,
+  "updatedAt": null,
+  "healthTitle": "Not connected to OBS",
+  "healthDetails": "The public status page is online, but live OBS telemetry has not been connected yet.",
+  "message": "Streamify status feed initialized. OBS integration is the next milestone."
+}
