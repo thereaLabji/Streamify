@@ -34,21 +34,21 @@ cmake -S . -B build -A x64
 cmake --build build --config RelWithDebInfo
 ```
 
-The resulting module is `streamify-obs.dll`. It must be installed into OBS's plugin layout alongside the Qt/runtime dependencies required by the exact OBS build. Do not copy an arbitrary DLL into OBS: plugin ABI and Qt versions must match.
+The resulting module is `streamify-obs.dll`. It must be installed into OBS's plugin layout alongside the Qt/runtime dependencies required by the exact OBS build. Do not copy an arbitrary DLL into OBS: plugin ABI and Qt versions must match. OBS Studio 33 introduced a new third-party plugin layout; use the new layout below rather than the legacy `obs-plugins\\64bit` location.
 
 ## Install location
 
-For a packaged Windows build, the expected OBS plugin layout is:
+For a standard Windows OBS installation, OBS Studio 33's current third-party plugin layout is:
 
 ```text
-obs-studio/
-  obs-plugins/
-    64bit/
-      streamify-obs.dll
-  data/
-    obs-plugins/
-      streamify-obs/
+C:\\ProgramData\\obs-studio\\plugins\\streamify-obs\\
+  streamify-obs.dll
+  data\\
+    locale\\
+      en-US.ini
 ```
+
+For OBS Portable mode, use the equivalent `plugins\\streamify-obs\\` directory inside the portable OBS installation root. OBS 33 still loads older plugin locations, but flags them as Legacy; the old Program Files layout is scheduled to stop loading in OBS 34.0. See the [official OBS plugin-location guidance](https://obsproject.com/kb/legacy-plugin-developer-info).
 
 The release installer/package will handle the exact paths and runtime dependencies. Manual DLL copying is for development only.
 
