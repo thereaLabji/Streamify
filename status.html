@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="Live streaming status and service health for Streamify.">
+  <title>Streamify — Live Status</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090d18;--panel:#111827;--panel2:#151f31;--line:#26344b;--text:#edf3ff;--muted:#98a8c2;--blue:#76a9ff;--green:#49d69a;--yellow:#f4c66b;--red:#ff7885}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#1d3153 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    .wrap{width:min(920px,calc(100% - 32px));margin:0 auto;padding:52px 0 36px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:34px}.brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:20px;letter-spacing:-.5px}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6ea8ff,#8c79ff);color:#08101e;font-weight:900}.eyebrow{color:var(--muted);font-size:12px;letter-spacing:1.8px;text-transform:uppercase;font-weight:700}
+    h1{font-size:clamp(30px,5vw,44px);line-height:1.12;letter-spacing:-1.6px;margin:8px 0 10px}.intro{color:var(--muted);margin:0 0 26px}.card{background:linear-gradient(145deg,rgba(21,31,49,.96),rgba(15,23,38,.96));border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 24px 70px #0003}.hero{display:flex;justify-content:space-between;align-items:center;gap:20px}.state{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:750}.dot{width:12px;height:12px;border-radius:50%;background:var(--yellow);box-shadow:0 0 18px currentColor}.state[data-state="online"] .dot{background:var(--green)}.state[data-state="issues"] .dot{background:var(--red)}.state[data-state="connecting"] .dot{background:var(--yellow)}.state[data-state="offline"] .dot{background:#8995aa}.sub{color:var(--muted);font-size:13px;margin-top:5px}.pill{border:1px solid var(--line);border-radius:999px;padding:6px 11px;color:var(--muted);font-size:12px;white-space:nowrap}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.metric{background:#0c1423;border:1px solid #202d42;border-radius:14px;padding:16px}.metric span{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.metric strong{font-size:18px;font-weight:700}.section{margin-top:22px}.section h2{font-size:15px;margin:0 0 12px}.notice{border:1px solid var(--line);border-radius:13px;padding:15px 16px;color:var(--muted);background:#0c1423}.notice strong{color:var(--text);display:block;margin-bottom:3px}.footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:22px}.footer a{color:var(--blue);text-decoration:none}.footer a:hover{text-decoration:underline}
+    @media(max-width:620px){.wrap{padding-top:30px}.hero{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.card{padding:20px}.pill{align-self:flex-start}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top"><div class="brand"><span class="mark">S</span> Streamify</div><span class="eyebrow">STREAM STATUS</span></header>
+    <p class="eyebrow">PUBLIC STATUS PAGE</p>
+    <h1>Know when the stream is live.</h1>
+    <p class="intro">A live overview of the stream and its connection health.</p>
+    <section class="card" aria-live="polite">
+      <div class="hero">
+        <div><div class="state" id="state" data-state="offline"><span class="dot"></span><span id="stateText">Offline</span></div><div class="sub" id="summary">Waiting for a status update from OBS.</div></div>
+        <span class="pill" id="connection">STATUS FEED · LOADING</span>
+      </div>
+      <div class="grid">
+        <div class="metric"><span>Platform</span><strong id="platform">—</strong></div>
+        <div class="metric"><span>Stream uptime</span><strong id="uptime">—</strong></div>
+        <div class="metric"><span>Last update</span><strong id="updated">—</strong></div>
+      </div>
+      <div class="section"><h2>Stream health</h2><div class="notice" id="health"><strong>Not connected to OBS</strong>Stream telemetry will appear here when the OBS integration is available.</div></div>
+      <div class="section"><h2>Latest update</h2><div class="notice" id="message">The Streamify status feed is waiting for its first OBS update.</div></div>
+    </section>
+    <footer class="footer"><span>Powered by Streamify</span><span>Read-only public page · <a href="https://github.com/thereaLabji/Streamify">View project on GitHub</a></span></footer>
+  </main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const startedAt = Date.now();
+  const fmtTime = value => {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
+  };
+  function render(data) {
+    const allowed = ["offline","connecting","online","issues"];
+    const state = allowed.includes(data.state) ? data.state : "offline";
+    $("state").dataset.state = state;
+    $("stateText").textContent = ({offline:"Offline",connecting:"Connecting",online:"Online",issues:"Issues"})[state];
+    $("summary").textContent = data.summary || "No additional stream information.";
+    $("platform").textContent = data.platform || "—";
+    $("uptime").textContent = data.uptime || (state === "online" ? "Live" : "—");
+    $("updated").textContent = fmtTime(data.updatedAt);
+    $("health").innerHTML = "";
+    const healthTitle = document.createElement("strong");
+    healthTitle.textContent = data.healthTitle || (state === "online" ? "Stream is running" : "No live telemetry");
+    const healthBody = document.createTextNode(data.healthDetails || "Detailed OBS health metrics will be available after the OBS integration is connected.");
+    $("health").append(healthTitle, healthBody);
+    $("message").textContent = data.message || "No status message.";
+    $("connection").textContent = "STATUS FEED · LIVE";
+  }
+  async function refresh() {
+    try {
+      const response = await fetch("./status.json?t=" + Date.now(), {cache:"no-store"});
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      render(await response.json());
+    } catch (error) {
+      $("connection").textContent = "STATUS FEED · UNAVAILABLE";
+      if (Date.now() - startedAt > 5000) $("summary").textContent = "Could not load the status feed. The page will retry automatically.";
+    }
+  }
+  refresh();
+  setInterval(refresh, 15000);
+})();
+</script>
+</body>
+</html>
