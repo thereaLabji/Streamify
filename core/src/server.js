@@ -32,7 +32,7 @@ function getRoute(url) {
   }
 }
 
-const server = createServer((request, response) => {
+const server = createServer(async (request, response) => {
   const route = getRoute(request.url);
 
   if (!route) {
@@ -40,9 +40,31 @@ const server = createServer((request, response) => {
     return;
   }
 
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    response.setHeader("allow", "GET, HEAD");
+  const pairingCodeRoute = route === "/api/v1/pairing/code";
+  if (request.method !== "GET" && request.method !== "HEAD" &&
+      !(request.method === "POST" && pairingCodeRoute)) {
+    response.setHeader("allow", "GET, HEAD, POST");
     sendJson(request, response, 405, { error: "method_not_allowed" });
+    return;
+  }
+
+  if (pairingCodeRoute && request.method === "POST") {
+    if (request.headers.origin) {
+      sendJson(request, response, 403, { error: "origin_not_allowed" });
+      return;
+    }
+    if (!cloud) {
+      sendJson(request, response, 503, { error: "cloud_publishing_disabled" });
+      return;
+    }
+    try {
+      const pairing = await cloud.createPairingCode();
+      sendJson(request, response, 201, pairing);
+    } catch (error) {
+      sendJson(request, response, error.status || 502, {
+        error: error.message || "pairing_request_failed"
+      });
+    }
     return;
   }
 
