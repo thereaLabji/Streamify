@@ -89,9 +89,12 @@ export class ObsConnector {
       this.telemetry = {
         renderingLagPercent: percent(stats.renderSkippedFrames, stats.renderTotalFrames),
         encodingLagPercent: percent(stats.outputSkippedFrames, stats.outputTotalFrames),
-        // OBS WebSocket does not expose a dropped-network-frame percentage
-        // in GetStats. Do not substitute outputCongestion: it is a different metric.
-        networkDroppedFramesPercent: null
+        // GetStreamStatus exposes the same dropped/total output counters used
+        // by OBS's own dropped-frame percentage: dropped / total * 100.
+        networkDroppedFramesPercent: percent(
+          streamStatus.outputSkippedFrames,
+          streamStatus.outputTotalFrames
+        )
       };
       this.stream = {
         active: Boolean(streamStatus.outputActive),
@@ -99,7 +102,9 @@ export class ObsConnector {
         duration: streamStatus.outputDuration ?? null,
         congestion: Number.isFinite(streamStatus.outputCongestion)
           ? streamStatus.outputCongestion
-          : null
+          : null,
+        droppedFrames: streamStatus.outputSkippedFrames ?? null,
+        totalFrames: streamStatus.outputTotalFrames ?? null
       };
       this.lastUpdatedAt = new Date().toISOString();
       this.lastError = null;
