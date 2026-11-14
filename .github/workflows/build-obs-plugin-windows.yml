@@ -1,0 +1,40 @@
+name: Build Streamify OBS Plugin (Windows)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Set up CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Check for OBS SDK configuration
+        shell: pwsh
+        run: |
+          if (-not $env:OBS_CMAKE_PREFIX_PATH) {
+            Write-Error "Set OBS_CMAKE_PREFIX_PATH as a repository variable to the matching OBS SDK CMake prefix before running this workflow."
+          }
+
+      - name: Configure
+        shell: pwsh
+        run: cmake -S obs-plugin -B obs-plugin/build -A x64 -DCMAKE_PREFIX_PATH="$env:OBS_CMAKE_PREFIX_PATH"
+
+      - name: Build
+        run: cmake --build obs-plugin/build --config RelWithDebInfo
+
+      - name: Upload plugin build
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamify-obs-windows-x64
+          path: obs-plugin/build/RelWithDebInfo/streamify-obs.dll
+          if-no-files-found: error
