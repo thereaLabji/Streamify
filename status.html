@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090d18">
-  <meta name="description" content="Public live stream status and connection health for Zack on Streamify.">
+  <meta name="description" content="Public live stream status and connection health on Streamify.">
   <title>Stream Status · Streamify</title>
   <style>
     :root{color-scheme:dark;--bg:#080d17;--panel:#111b2c;--panel2:#0c1524;--line:#263750;--text:#edf3ff;--muted:#9aabc5;--blue:#83b2ff;--green:#54d9a0;--red:#ff8793;--yellow:#f4c66b}
@@ -25,8 +25,8 @@
     </header>
 
     <section class="heading">
-      <div><p class="eyebrow">Public stream status</p><h1>Is Zack live?</h1><p class="intro">The latest stream status and health reported by Streamify Core.</p></div>
-      <div class="handle">@ddz0</div>
+      <div><p class="eyebrow">Public stream status</p><h1 id="pageTitle">Loading streamer…</h1><p class="intro" id="slogan">Looking up this streamer.</p></div>
+      <div class="handle" id="handle"></div>
     </section>
 
     <section class="panel" aria-live="polite" aria-atomic="false">
@@ -59,7 +59,8 @@
 <script>
 (() => {
   const API = "https://streamify-public-api.streamify-app.workers.dev";
-  const SLUG = "ddz0";
+  const params = new URLSearchParams(window.location.search);
+  const SLUG = (params.get("user_src") || "").trim().toLowerCase();
   const $ = id => document.getElementById(id);
   const metrics = [
     ["renderingLagPercent", "rendering", "renderingNote"],
@@ -67,6 +68,21 @@
     ["networkDroppedFramesPercent", "network", "networkNote"]
   ];
   let busy = false;
+  let notFound = false;
+
+  function showNotFound() {
+    notFound = true;
+    document.title = "404 · User not found · Streamify";
+    $("pageTitle").textContent = "404 — User not found";
+    $("slogan").textContent = "This Streamify user does not exist or has not set a slogan.";
+    $("handle").textContent = SLUG ? "@" + SLUG : "No username provided";
+    $("state").dataset.state = "error";
+    $("stateText").textContent = "404 · User not found";
+    $("feedBadge").textContent = "USER NOT FOUND";
+    $("feedBadge").className = "pill bad";
+    $("refresh").hidden = true;
+    setMessage("404 — User not found", "Check the username in the URL. The requested streamer could not be found.");
+  }
 
   function setMessage(title, detail) {
     const box = $("message");
@@ -89,6 +105,10 @@
   }
 
   function render(data) {
+    $("pageTitle").textContent = "Is @" + data.streamer + " live?";
+    $("slogan").textContent = data.slogan;
+    $("handle").textContent = "@" + data.streamer;
+    document.title = "@" + data.streamer + " · Stream Status · Streamify";
     const stale = data.stale === true;
     const live = data.state === "live" && !stale;
     const diagnostics = data.diagnostics || {};
@@ -107,22 +127,29 @@
     if (stale) {
       setMessage("The status feed is stale.", "The latest heartbeat is too old to confirm whether the stream is live. Streamify Core may be offline or disconnected.");
     } else if (issue) {
-      setMessage("Zack is live, but OBS reported a health warning.", "The values above are the latest available diagnostics. This public page is read-only and does not take action on the stream.");
+      setMessage("@" + data.streamer + " is live, but OBS reported a health warning.", "The values above are the latest available diagnostics. This public page is read-only and does not take action on the stream.");
     } else if (live) {
-      setMessage("Zack is currently live.", "Streamify Core is connected and reporting an active stream.");
+      setMessage("@" + data.streamer + " is currently live.", "Streamify Core is connected and reporting an active stream.");
     } else {
-      setMessage("Zack is currently offline.", "The status feed is connected. Check back here when the next stream begins.");
+      setMessage("@" + data.streamer + " is currently offline.", "The status feed is connected. Check back here when the next stream begins.");
     }
   }
 
   async function refresh() {
-    if (busy) return;
+    if (busy || notFound) return;
+    if (!SLUG || !/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(SLUG)) {
+      showNotFound();
+      return;
+    }
     busy = true;
     $("refresh").disabled = true;
     $("lastChecked").textContent = "Checking…";
     try {
       const response = await fetch(API + "/v1/status/" + encodeURIComponent(SLUG) + "?t=" + Date.now(), {cache:"no-store"});
-      if (response.status === 404) throw new Error("No status has been published yet. Streamify Core has not sent its first update.");
+      if (response.status === 404) {
+        showNotFound();
+        return;
+      }
       if (!response.ok) throw new Error("The status service returned HTTP " + response.status + ".");
       render(await response.json());
       $("lastChecked").textContent = "Checked " + new Date().toLocaleTimeString();
