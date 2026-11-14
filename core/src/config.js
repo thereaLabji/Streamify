@@ -20,6 +20,12 @@ export function loadConfig(env = process.env) {
       enabled: env.STREAMIFY_OBS_ENABLED === "true",
       address: env.STREAMIFY_OBS_ADDRESS || "ws://127.0.0.1:4455",
       password: env.STREAMIFY_OBS_PASSWORD || ""
+    }),
+    cloud: Object.freeze({
+      apiUrl: (env.STREAMIFY_CLOUD_API_URL || "https://streamify-public-api.streamify-app.workers.dev").replace(/\\/+$/, ""),
+      token: env.STREAMIFY_INGEST_TOKEN || "",
+      slug: env.STREAMIFY_STREAMER_SLUG || "ddz0",
+      intervalMs: 15000
     })
   });
 }
