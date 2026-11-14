@@ -73,3 +73,14 @@ npm start
 ```
 
 Core publishes a minimal OBS status snapshot every 15 seconds to the configured Cloudflare API. The public status page reads `/v1/status/ddz0`. The token stays on the streamer's machine and is sent only as a Bearer authorization header. Do not expose it in browser code, public configuration, or Git.
+
+
+## Streamer pairing (backend foundation)
+
+When Cloud publishing is configured, Streamify Core exposes a local-only endpoint to request a short-lived pairing code:
+
+```http
+POST http://127.0.0.1:47821/api/v1/pairing/code
+```
+
+The endpoint rejects browser-origin requests and uses the Core's private ingest credential to ask the Cloudflare Worker for a code. It returns a 16-digit code and expiry timestamp. The code expires after five minutes and can only be exchanged once through the public authentication API. Do not publish or share pairing codes.
