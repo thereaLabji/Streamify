@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "streamify-status",
-      "database_id": "REPLACE_WITH_CLOUDFLARE_D1_DATABASE_ID",
+      "database_id": "e5bbf5a0-a687-4075-a24d-0d3471681d12",
       "migrations_dir": "migrations"
     }
   ],
