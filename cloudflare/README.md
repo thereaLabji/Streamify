@@ -48,7 +48,7 @@ The deployment prints the public `workers.dev` URL. Check `/health`.
 - `GET /health` — public service health.
 - `POST /v1/heartbeat` — authenticated heartbeat; JSON body: `{"slug":"your-slug"}`.
 - `POST /v1/status` — authenticated public-safe status update.
-- `GET /v1/status/:slug` — public status for a streamer.\n- `POST /v1/pairing/code` — issue a short-lived 16-digit code (ingest-token authenticated; body: `{"slug":"your-slug"}`).\n- `POST /v1/pairing/exchange` — exchange a code once for a 30-day session (body: `{"code":"0000000000000000"}`).\n- `GET /v1/session` — validate the current session.\n- `DELETE /v1/session` — revoke the current session.
+- `GET /v1/status/:slug` — public status and saved slogan for a streamer; returns HTTP 404 when the streamer or slogan is not found.\n- `POST /v1/pairing/code` — issue a short-lived 16-digit code (ingest-token authenticated; body: `{"slug":"your-slug"}`).\n- `POST /v1/pairing/exchange` — exchange a code once for a 30-day session (body: `{"code":"0000000000000000"}`).\n- `GET /v1/session` — validate the current session.\n- `DELETE /v1/session` — revoke the current session.
 
 Status update example:
 
@@ -58,6 +58,7 @@ Status update example:
   "streamState": "live",
   "title": "My stream",
   "category": "Just Chatting",
+  "slogan": "My own streamer slogan",
   "diagnosticsState": "issues",
   "metrics": {
     "renderingLagPercent": 0.4,
