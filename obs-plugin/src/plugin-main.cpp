@@ -82,8 +82,7 @@ private:
             return;
 
         requestInFlight = true;
-        QNetworkRequest request(QUrl(QStringLiteral(kCoreBaseUrl) + QStringLiteral("/health")));
-        request.setTransferTimeout(3000);
+        QNetworkRequest request(QUrl(QString::fromLatin1(kCoreBaseUrl) + QStringLiteral("/health")));
         auto *reply = network->get(request);
 
         connect(reply, &QNetworkReply::finished, this, [this, reply] {
@@ -109,8 +108,7 @@ private:
 
     void loadObsStatus()
     {
-        QNetworkRequest request(QUrl(QStringLiteral(kCoreBaseUrl) + QStringLiteral("/api/v1/obs")));
-        request.setTransferTimeout(3000);
+        QNetworkRequest request(QUrl(QString::fromLatin1(kCoreBaseUrl) + QStringLiteral("/api/v1/obs")));
         auto *reply = network->get(request);
 
         connect(reply, &QNetworkReply::finished, this, [this, reply] {
@@ -142,8 +140,7 @@ private:
 
     void loadDiagnostics()
     {
-        QNetworkRequest request(QUrl(QStringLiteral(kCoreBaseUrl) + QStringLiteral("/api/v1/diagnostics")));
-        request.setTransferTimeout(3000);
+        QNetworkRequest request(QUrl(QString::fromLatin1(kCoreBaseUrl) + QStringLiteral("/api/v1/diagnostics")));
         auto *reply = network->get(request);
 
         connect(reply, &QNetworkReply::finished, this, [this, reply] {
