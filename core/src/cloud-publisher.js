@@ -102,7 +102,7 @@ export class CloudPublisher {
       error.status = response.status;
       throw error;
     }
-    if (typeof payload.code !== "string" || !/^\\d{16}$/.test(payload.code)) {
+    if (typeof payload.code !== "string" || !/^\d{16}$/.test(payload.code)) {
       throw new Error("invalid_pairing_response");
     }
     return { code: payload.code, expiresAt: payload.expiresAt };
