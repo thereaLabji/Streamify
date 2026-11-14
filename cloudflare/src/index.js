@@ -55,10 +55,13 @@ async function issuePairingCode(request, env) {
   catch (error) {
     return json({ error: error.message === "body_too_large" ? "body_too_large" : "invalid_json" }, 400);
   }
-  if (!validSlug(body.slug)) return json({ error: "invalid_slug" }, 400);
+  if (!validIngestSlug(body.slug, env)) return json({ error: "invalid_slug" }, 400);
   const allowed = await rateLimit(env, `pair-create:${body.slug}`, 5, 3600);
   if (!allowed) return json({ error: "rate_limited" }, 429);
   const now = Math.floor(Date.now() / 1000);
+  await env.DB.prepare("DELETE FROM pairing_codes WHERE expires_at <= ? OR (used_at IS NOT NULL AND used_at < ?)").bind(now, now - 86400).run();
+  await env.DB.prepare("DELETE FROM streamer_sessions WHERE expires_at <= ? OR (revoked_at IS NOT NULL AND revoked_at < ?)").bind(now, now - 86400).run();
+  await env.DB.prepare("DELETE FROM auth_rate_limits WHERE window_started_at < ?").bind(now - 86400).run();
   const code = await randomPairingCode();
   const codeHash = await sha256Hex(code);
   await env.DB.prepare(
@@ -135,7 +138,8 @@ async function sessionRoute(request, env) {
   }
   return json({ error: "method_not_allowed" }, 405, { allow: "GET, DELETE" });
 }
-\nconst JSON_HEADERS = {
+
+const JSON_HEADERS = {
   "content-type": "application/json; charset=utf-8",
   "cache-control": "no-store",
   "x-content-type-options": "nosniff"
@@ -171,7 +175,11 @@ function validSlug(value) {
   return typeof value === "string" && /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(value);
 }
 
-function validIngestSlug(value, env) {\n  return validSlug(value) && (!env.STREAMIFY_INGEST_SLUG || value === env.STREAMIFY_INGEST_SLUG);\n}\n\nfunction validPercent(value) {
+function validIngestSlug(value, env) {
+  return validSlug(value) && (!env.STREAMIFY_INGEST_SLUG || value === env.STREAMIFY_INGEST_SLUG);
+}
+
+function validPercent(value) {
   return value === null || value === undefined ||
     (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100);
 }
