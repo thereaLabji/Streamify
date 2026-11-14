@@ -171,7 +171,7 @@ function validSlug(value) {
   return typeof value === "string" && /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(value);
 }
 
-function validPercent(value) {
+function validIngestSlug(value, env) {\n  return validSlug(value) && (!env.STREAMIFY_INGEST_SLUG || value === env.STREAMIFY_INGEST_SLUG);\n}\n\nfunction validPercent(value) {
   return value === null || value === undefined ||
     (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100);
 }
@@ -306,7 +306,7 @@ export default {
       if (!(await authorized(request, env))) return json({ error: "unauthorized" }, 401, cors);
       try {
         const body = await readBody(request);
-        if (!validSlug(body.slug)) return json({ error: "invalid_slug" }, 400, cors);
+        if (!validIngestSlug(body.slug, env)) return json({ error: "invalid_slug" }, 400, cors);
         const now = new Date().toISOString();
         await saveHeartbeat(env, body.slug, now);
         return json({ accepted: true, lastSeenAt: now }, 202, cors);
@@ -319,7 +319,7 @@ export default {
       if (!(await authorized(request, env))) return json({ error: "unauthorized" }, 401, cors);
       try {
         const body = await readBody(request);
-        if (!validSlug(body.slug)) return json({ error: "invalid_slug" }, 400, cors);
+        if (!validIngestSlug(body.slug, env)) return json({ error: "invalid_slug" }, 400, cors);
         if (!["live", "offline"].includes(body.streamState)) {
           return json({ error: "invalid_stream_state" }, 400, cors);
         }
