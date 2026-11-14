@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="Your Streamify streamer dashboard.">
+  <title>Dashboard · Streamify</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090d18;--panel:#111b2c;--line:#263750;--text:#edf3ff;--muted:#9aabc5;--blue:#83b2ff;--green:#54d9a0;--red:#ff8793}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#1c3458 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{width:min(980px,calc(100% - 32px));margin:auto;padding:38px 0}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:44px}.brand{display:flex;align-items:center;gap:11px;font-size:20px;font-weight:800}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#76b4ff,#987bff);color:#08101e;font-weight:950}.actions{display:flex;align-items:center;gap:14px}.actions a{color:var(--muted);font-size:13px;text-decoration:none}.actions button{border:1px solid var(--line);border-radius:10px;padding:9px 13px;background:#111b2c;color:var(--text);cursor:pointer}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{margin:8px 0;font-size:clamp(30px,5vw,42px);letter-spacing:-1.4px}.intro{color:var(--muted);margin:0 0 25px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{padding:23px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#152238f5,#101827f5)}.card h2{font-size:15px;margin:0 0 14px}.value{font-size:22px;font-weight:750}.muted{color:var(--muted);font-size:13px}.status{display:inline-flex;align-items:center;gap:8px;color:var(--green);font-weight:700}.dot{width:9px;height:9px;border-radius:50%;background:currentColor}.notice{margin-top:16px;padding:16px;border:1px solid #344762;border-radius:12px;background:#0a1322;color:var(--muted);font-size:13px}.notice strong{display:block;color:var(--text);margin-bottom:4px}.footer{margin-top:26px;color:#8293ad;font-size:12px}@media(max-width:640px){.top{align-items:flex-start}.actions{flex-direction:column-reverse;align-items:flex-end}.grid{grid-template-columns:1fr}.wrap{padding-top:25px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div class="brand"><span class="mark">S</span><span>Streamify</span></div>
+      <nav class="actions"><a href="./status.html">Public status</a><button id="logout" type="button">Sign out</button></nav>
+    </header>
+    <p class="eyebrow">Streamer workspace</p>
+    <h1>Your dashboard.</h1>
+    <p class="intro">Your browser is paired with Streamify. This is the first authenticated dashboard milestone.</p>
+    <section class="grid">
+      <article class="card"><h2>Account</h2><div class="value" id="streamer">@—</div><p class="muted">Authenticated streamer account</p></article>
+      <article class="card"><h2>Session</h2><div class="status"><span class="dot"></span><span id="sessionState">Checking…</span></div><p class="muted" id="expiry">Verifying your session with Streamify API.</p></article>
+    </section>
+    <div class="notice"><strong>Dashboard foundation is ready.</strong>OBS telemetry, diagnostics, stream controls, and session history will be added here in later milestones. No stream settings or broadcast controls are exposed yet.</div>
+    <footer class="footer">Streamify · Secure pairing session · <a href="https://github.com/thereaLabji/Streamify" style="color:var(--blue)">GitHub repository</a></footer>
+  </main>
+<script>
+(() => {
+  const API = "https://streamify-public-api.streamify-app.workers.dev";
+  const token = sessionStorage.getItem("streamify_session");
+  const state = document.getElementById("sessionState");
+  const expiry = document.getElementById("expiry");
+  function clearAndRedirect() {
+    sessionStorage.removeItem("streamify_session");
+    sessionStorage.removeItem("streamify_session_expiry");
+    window.location.replace("./login.html");
+  }
+  document.getElementById("logout").addEventListener("click", async () => {
+    try {
+      if (token) await fetch(API + "/v1/session", {
+        method: "DELETE",
+        headers: {Authorization: "Bearer " + token},
+        cache: "no-store"
+      });
+    } finally {
+      clearAndRedirect();
+    }
+  });
+  if (!token) {
+    clearAndRedirect();
+    return;
+  }
+  fetch(API + "/v1/session", {
+    method: "GET",
+    headers: {Authorization: "Bearer " + token},
+    cache: "no-store"
+  }).then(async response => {
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.authenticated !== true) throw new Error("Your session is no longer valid.");
+    document.getElementById("streamer").textContent = "@" + data.streamer;
+    state.textContent = "Authenticated";
+    expiry.textContent = "Session expires " + new Date(data.expiresAt).toLocaleString() + ".";
+  }).catch(() => {
+    state.textContent = "Session expired";
+    expiry.textContent = "Please pair again with a fresh code from Streamify Core.";
+    window.setTimeout(clearAndRedirect, 1300);
+  });
+})();
+</script>
+</body>
+</html>
