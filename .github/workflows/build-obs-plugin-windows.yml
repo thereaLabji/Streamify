@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: windows-2022
+    env:
+      OBS_CMAKE_PREFIX_PATH: ${{ vars.OBS_CMAKE_PREFIX_PATH }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
