@@ -1,0 +1,16 @@
+{
+  "name": "@streamify/public-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create streamify-status",
+    "db:migrate:local": "wrangler d1 migrations apply streamify-status --local",
+    "db:migrate:remote": "wrangler d1 migrations apply streamify-status --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
