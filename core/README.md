@@ -1,46 +1,54 @@
 # Streamify Core
 
-Streamify Core is the local runtime that will connect the Streamify application, OBS integration, diagnostics, and future authenticated services.
+Streamify Core is the local runtime for Streamify, including a read-only OBS WebSocket connector and diagnostics.
 
 ## Requirements
 
 - Node.js 20 or newer
-- No third-party packages are required for this foundation
+- OBS Studio 28 or newer (built-in obs-websocket v5)
 
-## Run
+## Install and run
 
 From this directory:
 
 ```sh
+npm install
 npm start
 ```
 
-The API listens on `http://127.0.0.1:47821` by default.
+The API listens on `http://127.0.0.1:47821` by default. It remains bound to loopback for local development.
 
-You can override the port with `STREAMIFY_CORE_PORT`. The bind host defaults to loopback and should remain local-only during development.
+## Configure OBS
 
-## Initial endpoints
+1. Open OBS Studio.
+2. Open **Tools → WebSocket Server Settings**.
+3. Enable the WebSocket server and keep the default port `4455`.
+4. If authentication is enabled, copy the WebSocket password.
+5. Start Streamify Core with these environment variables in PowerShell:
+
+```powershell
+$env:STREAMIFY_OBS_ENABLED = "true"
+$env:STREAMIFY_OBS_ADDRESS = "ws://127.0.0.1:4455"
+$env:STREAMIFY_OBS_PASSWORD = "YOUR_OBS_WEBSOCKET_PASSWORD"
+npm start
+```
+
+If OBS authentication is disabled, omit the password variable. Do not commit your OBS password or share it publicly. The connector connects only to the local OBS WebSocket endpoint.
+
+## API
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | GET | `/health` | Basic process health |
 | GET | `/api/v1/core` | Core version, uptime, and capabilities |
-| GET | `/api/v1/diagnostics` | Current diagnostics readiness |
+| GET | `/api/v1/obs` | OBS connection and stream status |
+| GET | `/api/v1/diagnostics` | Current diagnostics |
 
-The initial API is read-only. Telemetry ingestion and control routes will be added with the OBS Connector after an authentication and local-origin security design is in place.
+## Telemetry coverage
 
-## Diagnostics
+The connector reads OBS `GetStats` and `GetStreamStatus` requests. Rendering lag and encoding lag percentages are calculated from OBS skipped/total frame counters. Network dropped frames remain `unknown` because the current OBS WebSocket statistics do not provide an equivalent dropped-frame percentage; stream congestion is exposed separately and is not mislabeled as dropped frames.
 
-The diagnostics engine is a pure evaluator. It distinguishes rendering lag, encoding lag, and network-dropped frames. Missing telemetry is marked unknown rather than healthy.
-
-Initial warning thresholds are placeholders for development, not universal recommendations. They must be calibrated against OBS telemetry and made configurable before release.
-
-## Safety
-
-- Core binds to `127.0.0.1` by default.
-- No stream keys, passwords, or access tokens are stored here.
-- No OBS controls or automatic repairs exist in this milestone.
-- Future actions that could interrupt a live stream must require explicit streamer approval.
+The connector is read-only. It does not change scenes, start/stop streaming or recording, or modify OBS settings. Diagnostics thresholds remain development placeholders and need calibration before release.
 
 ## Tests
 
@@ -48,6 +56,4 @@ Initial warning thresholds are placeholders for development, not universal recom
 npm test
 ```
 
-## Current limitations
-
-This is the Core foundation only. It does not yet connect to OBS, accept telemetry, issue pairing codes, authenticate streamers, or publish to the public website.
+Streamer authentication, pairing codes, automatic repair, and cloud publishing are not part of this milestone.
