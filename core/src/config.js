@@ -25,6 +25,7 @@ export function loadConfig(env = process.env) {
       apiUrl: (env.STREAMIFY_CLOUD_API_URL || "https://streamify-public-api.streamify-app.workers.dev").replace(/\/+$/, ""),
       token: env.STREAMIFY_INGEST_TOKEN || "",
       slug: env.STREAMIFY_STREAMER_SLUG || "ddz0",
+      slogan: env.STREAMIFY_STREAMER_SLOGAN || "",
       intervalMs: 15000
     })
   });
