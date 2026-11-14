@@ -141,6 +141,12 @@ async function sessionRoute(request, env) {
   "x-content-type-options": "nosniff"
 };
 
+function withCors(response, cors) {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(cors)) headers.set(key, value);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
@@ -281,15 +287,15 @@ export default {
     }
 
     if (url.pathname === "/v1/pairing/code" && request.method === "POST") {
-      return issuePairingCode(request, env);
+      return withCors(await issuePairingCode(request, env), cors);
     }
 
     if (url.pathname === "/v1/pairing/exchange" && request.method === "POST") {
-      return exchangePairingCode(request, env);
+      return withCors(await exchangePairingCode(request, env), cors);
     }
 
     if (url.pathname === "/v1/session" && (request.method === "GET" || request.method === "DELETE")) {
-      return sessionRoute(request, env);
+      return withCors(await sessionRoute(request, env), cors);
     }
 
     if (url.pathname === "/health" && request.method === "GET") {
