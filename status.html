@@ -19,7 +19,7 @@
     <header class="top"><div class="brand"><span class="mark">S</span> Streamify</div><span class="eyebrow">STREAM STATUS</span></header>
     <p class="eyebrow">PUBLIC STATUS PAGE</p>
     <h1>Know when the stream is live.</h1>
-    <p class="intro">A live overview of the stream and its connection health.</p>
+    <p class="intro">A live overview of Zack’s YouTube stream and its connection health. <a href="https://www.youtube.com/@ddz0streams" style="color:var(--blue)">YouTube channel</a></p>
     <section class="card" aria-live="polite">
       <div class="hero">
         <div><div class="state" id="state" data-state="offline"><span class="dot"></span><span id="stateText">Offline</span></div><div class="sub" id="summary">Waiting for a status update from OBS.</div></div>
@@ -38,37 +38,55 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const startedAt = Date.now();
+  const API = "https://streamify-public-api.streamify-app.workers.dev";
+  const SLUG = "ddz0";
   const fmtTime = value => {
     if (!value) return "—";
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
   };
   function render(data) {
-    const allowed = ["offline","connecting","online","issues"];
-    const state = allowed.includes(data.state) ? data.state : "offline";
+    const live = data.state === "live";
+    const diagnostics = data.diagnostics || {};
+    const hasIssues = diagnostics.state === "issues";
+    const state = live ? (hasIssues ? "issues" : "online") : "offline";
     $("state").dataset.state = state;
-    $("stateText").textContent = ({offline:"Offline",connecting:"Connecting",online:"Online",issues:"Issues"})[state];
-    $("summary").textContent = data.summary || "No additional stream information.";
-    $("platform").textContent = data.platform || "—";
-    $("uptime").textContent = data.uptime || (state === "online" ? "Live" : "—");
-    $("updated").textContent = fmtTime(data.updatedAt);
+    $("stateText").textContent = ({offline:"Offline",online:"Live",issues:"Live · Issues"})[state];
+    $("summary").textContent = live
+      ? "Zack is currently streaming on YouTube."
+      : "Zack is not currently live. The status feed is connected.";
+    $("platform").textContent = "YouTube";
+    $("uptime").textContent = live ? "Live" : "—";
+    $("updated").textContent = fmtTime(data.updatedAt || data.lastSeenAt);
     $("health").innerHTML = "";
-    const healthTitle = document.createElement("strong");
-    healthTitle.textContent = data.healthTitle || (state === "online" ? "Stream is running" : "No live telemetry");
-    const healthBody = document.createTextNode(data.healthDetails || "Detailed OBS health metrics will be available after the OBS integration is connected.");
-    $("health").append(healthTitle, healthBody);
-    $("message").textContent = data.message || "No status message.";
-    $("connection").textContent = "STATUS FEED · LIVE";
+    const title = document.createElement("strong");
+    title.textContent = hasIssues ? "Stream health issues detected" :
+      diagnostics.state === "healthy" ? "Stream health looks good" :
+      "Waiting for diagnostic data";
+    const values = [
+      ["Rendering lag", diagnostics.renderingLagPercent],
+      ["Encoding lag", diagnostics.encodingLagPercent],
+      ["Network dropped frames", diagnostics.networkDroppedFramesPercent]
+    ];
+    const detail = document.createElement("div");
+    detail.textContent = values.map(([name,value]) =>
+      name + ": " + (Number.isFinite(value) ? value.toFixed(2) + "%" : "—")
+    ).join(" · ");
+    $("health").append(title, detail);
+    $("message").textContent = live
+      ? (data.stream?.title || "Live stream detected by Streamify Core.")
+      : "Streamify Core is reporting that the stream is offline.";
+    $("connection").textContent = data.stale ? "STATUS FEED · STALE" : "STATUS FEED · LIVE";
   }
   async function refresh() {
     try {
-      const response = await fetch("./status.json?t=" + Date.now(), {cache:"no-store"});
+      const response = await fetch(API + "/v1/status/" + encodeURIComponent(SLUG) + "?t=" + Date.now(), {cache:"no-store"});
+      if (response.status === 404) throw new Error("No Streamify Core has published this streamer yet.");
       if (!response.ok) throw new Error("HTTP " + response.status);
       render(await response.json());
     } catch (error) {
       $("connection").textContent = "STATUS FEED · UNAVAILABLE";
-      if (Date.now() - startedAt > 5000) $("summary").textContent = "Could not load the status feed. The page will retry automatically.";
+      $("summary").textContent = error.message || "Could not load the public status feed.";
     }
   }
   refresh();
