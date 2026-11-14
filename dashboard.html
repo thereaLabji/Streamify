@@ -106,7 +106,7 @@
 
     $("streamState").dataset.state = state;
     $("streamStateText").textContent = stale ? "Feed offline" : live ? (hasIssues ? "Live · Issues" : "Live") : "Offline";
-    $("streamer").textContent = "@" + (data.streamer || SLUG);
+    $("streamer").textContent = "@" + (data.streamer || streamerSlug);
     $("streamTitle").textContent = data.stream?.title || "No stream title reported";
     $("feedState").textContent = stale ? "FEED STALE" : "FEED CONNECTED";
     $("feedState").className = "pill " + (stale ? "warn" : "good");
