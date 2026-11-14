@@ -86,4 +86,26 @@ export class CloudPublisher {
     this.timer = null;
     if (this.inFlight) await this.inFlight;
   }
+  async createPairingCode() {
+    const response = await fetch(`${this.apiUrl}/v1/pairing/code`, {
+      method: "POST",
+      headers: {
+        "authorization": `Bearer ${this.token}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ slug: this.slug }),
+      signal: AbortSignal.timeout(8000)
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(payload.error || `pairing_request_failed_${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    if (typeof payload.code !== "string" || !/^\\d{16}$/.test(payload.code)) {
+      throw new Error("invalid_pairing_response");
+    }
+    return { code: payload.code, expiresAt: payload.expiresAt };
+  }
+
 }
