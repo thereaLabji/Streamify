@@ -2,9 +2,11 @@
 
 An OBS companion and public website for streaming status.
 
-**Current milestone: v0.1 — Public status foundation**
+**Current milestone: v0.2 — Streamify Core foundation**
 
 ## What exists now
+
+- A standalone Node.js Core service in [`core/`](./core/README.md), with a loopback-only read API and initial diagnostics engine.
 
 - A responsive, read-only public status page at [status.html](./status.html).
 - The repository homepage redirects to the status page.
@@ -42,6 +44,12 @@ The initial `status.json` is an offline example. The future OBS integration or a
 ```
 
 Do not put stream keys, passwords, private tokens, or other secrets in this public JSON file.
+
+## Streamify Core
+
+See [`core/README.md`](./core/README.md) for requirements, startup instructions, API endpoints, diagnostics behavior, and current limitations. Run it with Node.js 20 or newer from the `core` directory using `npm start`; run its tests using `npm test`.
+
+The Core currently exposes read-only health and diagnostics endpoints. It does not yet connect to OBS or authenticate streamers.
 
 ## Planned architecture
 
