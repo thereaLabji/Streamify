@@ -22,7 +22,7 @@ export function loadConfig(env = process.env) {
       password: env.STREAMIFY_OBS_PASSWORD || ""
     }),
     cloud: Object.freeze({
-      apiUrl: (env.STREAMIFY_CLOUD_API_URL || "https://streamify-public-api.streamify-app.workers.dev").replace(/\\/+$/, ""),
+      apiUrl: (env.STREAMIFY_CLOUD_API_URL || "https://streamify-public-api.streamify-app.workers.dev").replace(/\/+$/, ""),
       token: env.STREAMIFY_INGEST_TOKEN || "",
       slug: env.STREAMIFY_STREAMER_SLUG || "ddz0",
       intervalMs: 15000
