@@ -158,11 +158,20 @@ function json(data, status = 200, extraHeaders = {}) {
   });
 }
 
+function normalizeOrigin(value) {
+  if (!value) return "";
+  try {
+    return new URL(value).origin.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
 function corsHeaders(request, env) {
   const origin = request.headers.get("Origin");
-  const allowed = env.ALLOWED_ORIGIN || "https://thereaLabji.github.io";
+  const allowed = env.ALLOWED_ORIGIN || "https://therealabji.github.io";
   const headers = { "vary": "Origin" };
-  if (origin === allowed) {
+  if (origin && normalizeOrigin(origin) === normalizeOrigin(allowed)) {
     headers["access-control-allow-origin"] = origin;
     headers["access-control-allow-methods"] = "GET, POST, DELETE, OPTIONS";
     headers["access-control-allow-headers"] = "Authorization, Content-Type";
