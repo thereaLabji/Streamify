@@ -9,14 +9,14 @@
   <style>
     :root{color-scheme:dark;--bg:#090d18;--panel:#111b2c;--line:#263750;--text:#edf3ff;--muted:#9aabc5;--blue:#83b2ff;--green:#54d9a0;--red:#ff8793;--yellow:#f4c66b}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#1c3458 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    .wrap{width:min(1080px,calc(100% - 32px));margin:auto;padding:34px 0}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:42px}.brand{display:flex;align-items:center;gap:11px;font-size:20px;font-weight:800}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#76b4ff,#987bff);color:#08101e;font-weight:950}.actions{display:flex;align-items:center;gap:14px}.actions a{color:var(--muted);font-size:13px;text-decoration:none}.actions button{border:1px solid var(--line);border-radius:10px;padding:9px 13px;background:#111b2c;color:var(--text);cursor:pointer}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{margin:8px 0;font-size:clamp(30px,5vw,42px);letter-spacing:-1.4px}.intro{color:var(--muted);margin:0 0 24px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 13px}.section-head h2{font-size:16px;margin:0}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{padding:21px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#152238f5,#101827f5);min-width:0}.card h2{font-size:13px;color:var(--muted);font-weight:650;margin:0 0 11px}.value{font-size:25px;font-weight:780;letter-spacing:-.5px;overflow-wrap:anywhere}.unit{font-size:14px;color:var(--muted);font-weight:550}.statusline{display:inline-flex;align-items:center;gap:9px;font-weight:750;font-size:20px}.dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);box-shadow:0 0 14px currentColor}.statusline[data-state="live"] .dot{background:var(--green)}.statusline[data-state="issues"] .dot{background:var(--red)}.statusline[data-state="offline"] .dot{background:#8995aa}.statusline[data-state="error"] .dot{background:var(--red)}.wide{grid-column:span 2}.notice{padding:15px 16px;border:1px solid #344762;border-radius:12px;background:#0a1322;color:var(--muted);font-size:13px}.notice strong{display:block;color:var(--text);margin-bottom:3px}.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:13px;color:var(--muted);font-size:12px}.pill{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--muted);font-size:11px;letter-spacing:.5px}.pill.good{color:var(--green);border-color:#28644e}.pill.warn{color:var(--yellow);border-color:#68552c}.pill.bad{color:var(--red);border-color:#713a45}.refresh{border:0;background:transparent;color:var(--blue);font:inherit;font-size:12px;cursor:pointer;padding:5px}.footer{margin-top:28px;color:#8293ad;font-size:12px}.footer a{color:var(--blue)}@media(max-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wide{grid-column:span 2}}@media(max-width:520px){.top{align-items:flex-start}.actions{flex-direction:column-reverse;align-items:flex-end}.grid{grid-template-columns:1fr}.wide{grid-column:auto}.wrap{padding-top:24px}}
+    .wrap{width:min(1080px,calc(100% - 32px));margin:auto;padding:34px 0}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:42px}.brand{display:flex;align-items:center;gap:11px;font-size:20px;font-weight:800}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#76b4ff,#987bff);color:#08101e;font-weight:950}.actions{display:flex;align-items:center;gap:14px}.actions a{color:var(--muted);font-size:13px;text-decoration:none}.actions button{border:1px solid var(--line);border-radius:10px;padding:9px 13px;background:#111b2c;color:var(--text);cursor:pointer}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{margin:8px 0;font-size:clamp(30px,5vw,42px);letter-spacing:-1.4px}.intro{color:var(--muted);margin:0 0 24px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 13px}.section-head h2{font-size:16px;margin:0}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{padding:21px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#152238f5,#101827f5);min-width:0}.card h2{font-size:13px;color:var(--muted);font-weight:650;margin:0 0 11px}.value{font-size:25px;font-weight:780;letter-spacing:-.5px;overflow-wrap:anywhere}.unit{font-size:14px;color:var(--muted);font-weight:550}.statusline{display:inline-flex;align-items:center;gap:9px;font-weight:750;font-size:20px}.dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);box-shadow:0 0 14px currentColor}.statusline[data-state="live"] .dot{background:var(--green)}.statusline[data-state="issues"] .dot{background:var(--red)}.statusline[data-state="offline"] .dot{background:#8995aa}.statusline[data-state="stale"] .dot{background:var(--yellow)}.statusline[data-state="error"] .dot{background:var(--red)}.wide{grid-column:span 2}.notice{padding:15px 16px;border:1px solid #344762;border-radius:12px;background:#0a1322;color:var(--muted);font-size:13px}.notice strong{display:block;color:var(--text);margin-bottom:3px}.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:13px;color:var(--muted);font-size:12px}.pill{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--muted);font-size:11px;letter-spacing:.5px}.pill.good{color:var(--green);border-color:#28644e}.pill.warn{color:var(--yellow);border-color:#68552c}.pill.bad{color:var(--red);border-color:#713a45}.refresh{border:0;background:transparent;color:var(--blue);font:inherit;font-size:12px;cursor:pointer;padding:5px}.footer{margin-top:28px;color:#8293ad;font-size:12px}.footer a{color:var(--blue)}@media(max-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wide{grid-column:span 2}}@media(max-width:520px){.top{align-items:flex-start}.actions{flex-direction:column-reverse;align-items:flex-end}.grid{grid-template-columns:1fr}.wide{grid-column:auto}.wrap{padding-top:24px}}
   </style>
 </head>
 <body>
   <main class="wrap">
     <header class="top">
       <div class="brand"><span class="mark">S</span><span>Streamify</span></div>
-      <nav class="actions"><a href="./status.html">Public status</a><button id="logout" type="button">Sign out</button></nav>
+      <nav class="actions"><a id="publicPageLink" href="./status.html">Public page ↗</a><button id="logout" type="button">Sign out</button></nav>
     </header>
 
     <p class="eyebrow">Streamer workspace</p>
@@ -28,7 +28,7 @@
       <article class="card">
         <h2>Stream status</h2>
         <div class="statusline" id="streamState" data-state="loading"><span class="dot"></span><span id="streamStateText">Loading…</span></div>
-        <div class="meta"><span id="streamer">@—</span><span id="streamTitle">No stream title</span></div>
+        <div class="meta"><span id="streamer">@—</span><span id="streamTitle">No stream title</span><span id="streamCategory">Category: —</span><span id="viewerCount">Viewers: —</span></div>
       </article>
       <article class="card">
         <h2>Account session</h2>
@@ -58,8 +58,8 @@
 <script>
 (() => {
   const API = "https://streamify-public-api.streamify-app.workers.dev";
-  const SLUG = "ddz0";
   const token = sessionStorage.getItem("streamify_session");
+  let streamerSlug = "";
   const $ = id => document.getElementById(id);
   let refreshTimer;
   let sessionExpiresAt = null;
@@ -102,12 +102,14 @@
     const diagnostics = data.diagnostics || {};
     const hasIssues = diagnostics.state === "issues";
     const stale = data.stale === true;
-    const state = stale ? "offline" : live ? (hasIssues ? "issues" : "live") : "offline";
+    const state = stale ? "stale" : live ? (hasIssues ? "issues" : "live") : "offline";
 
     $("streamState").dataset.state = state;
-    $("streamStateText").textContent = stale ? "Feed offline" : live ? (hasIssues ? "Live · Issues" : "Live") : "Offline";
+    $("streamStateText").textContent = stale ? "Feed stale" : live ? (hasIssues ? "Live · Issues" : "Live") : "Offline";
     $("streamer").textContent = "@" + (data.streamer || streamerSlug);
     $("streamTitle").textContent = data.stream?.title || "No stream title reported";
+    $("streamCategory").textContent = "Category: " + (data.stream?.category || "—");
+    $("viewerCount").textContent = "Viewers: " + (Number.isInteger(data.stream?.viewers) ? data.stream.viewers : "—");
     $("feedState").textContent = stale ? "FEED STALE" : "FEED CONNECTED";
     $("feedState").className = "pill " + (stale ? "warn" : "good");
     $("updated").textContent = data.updatedAt ? formatDate(data.updatedAt) : "—";
@@ -130,7 +132,8 @@
 
   async function refreshStatus() {
     try {
-      const response = await fetch(API + "/v1/status/" + encodeURIComponent(SLUG) + "?t=" + Date.now(), {cache:"no-store"});
+      if (!streamerSlug) throw new Error("Your streamer identity is not available. Please sign in again.");
+      const response = await fetch(API + "/v1/status/" + encodeURIComponent(streamerSlug) + "?t=" + Date.now(), {cache:"no-store"});
       if (!response.ok) throw new Error(response.status === 404 ? "No status has been published yet. Start Streamify Core with cloud publishing enabled." : "Status API returned HTTP " + response.status + ".");
       render(await response.json());
     } catch (error) {
@@ -155,7 +158,9 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data.authenticated !== true) throw new Error("Session is no longer valid.");
-      $("streamer").textContent = "@" + data.streamer;
+      streamerSlug = data.streamer;
+      $("streamer").textContent = "@" + streamerSlug;
+      $("publicPageLink").href = "./status.html?user_src=" + encodeURIComponent(streamerSlug);
       $("sessionState").textContent = "Authenticated";
       sessionExpiresAt = data.expiresAt;
       $("expiry").textContent = "Expires " + formatDate(data.expiresAt);
